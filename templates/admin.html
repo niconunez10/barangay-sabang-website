@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>Admin dashboard | Barangay Sabang</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dash-body">
+  <header class="dash-header">
+    <div class="dash-header-inner">
+      <a class="brand" href="/admin" aria-label="Admin dashboard home">
+        <div class="brand-mark"><span>BS</span></div>
+        <div class="brand-copy"><strong>BARANGAY SABANG</strong><small>ADMIN DASHBOARD</small></div>
+      </a>
+      <div class="dash-user">
+        <a class="dash-link" href="/" target="_blank" rel="noopener">View website</a>
+        <span class="dash-who">Signed in as <strong>{{ admin_name }}</strong></span>
+        <form method="post" action="{{ url_for('logout') }}">
+          <button class="btn btn-outline-red" type="submit">Log out</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <div class="demo-warning">
+      Demo data is kept in memory and resets when Flask restarts. The login is admin / admin, so change it before anyone else can reach this site.
+    </div>
+
+    <section class="dash-stats" aria-label="Summary">
+      <div class="dash-stat"><span class="dash-stat-label">Announcements</span><strong id="sumAnnouncements">–</strong></div>
+      <div class="dash-stat"><span class="dash-stat-label">Events</span><strong id="sumEvents">–</strong></div>
+      <div class="dash-stat"><span class="dash-stat-label">In archive</span><strong id="sumArchived">–</strong></div>
+      <div class="dash-stat dash-stat-alert"><span class="dash-stat-label">New suggestions</span><strong id="sumNew">–</strong></div>
+      <div class="dash-stat dash-stat-alert"><span class="dash-stat-label">New problem reports</span><strong id="sumReports">–</strong></div>
+    </section>
+
+    <div class="dash-tabs" role="tablist" aria-label="Manage content">
+      <button role="tab" class="dash-tab active" data-tab="announcements" aria-selected="true">Announcements</button>
+      <button role="tab" class="dash-tab" data-tab="events" aria-selected="false">Events</button>
+      <button role="tab" class="dash-tab" data-tab="guides" aria-selected="false">Guide AI</button>
+      <button role="tab" class="dash-tab" data-tab="suggestions" aria-selected="false">Suggestions <span class="tab-badge hidden" id="tabBadge">0</span></button>
+      <button role="tab" class="dash-tab" data-tab="reports" aria-selected="false">Problem reports <span class="tab-badge hidden" id="reportBadge">0</span></button>
+    </div>
+
+    <!-- Announcements -->
+    <section class="dash-panel" id="tab-announcements" role="tabpanel">
+      <div class="dash-grid">
+        <form id="announcementForm" class="dash-card admin-form">
+          <h2>Post an announcement</h2>
+          <label for="aTitle">Title <span class="required">*</span></label>
+          <input id="aTitle" maxlength="140" required placeholder="e.g. Barangay assembly this Saturday">
+          <label for="aCategory">Category</label>
+          <select id="aCategory"><option>Community</option><option>Services</option><option>Youth</option></select>
+          <label for="aDescription">Description <span class="required">*</span></label>
+          <textarea id="aDescription" maxlength="1200" rows="4" required placeholder="Write a short announcement..."></textarea>
+          <label>Photos, videos, or files <span class="optional">(optional)</span></label>
+          <input id="aFiles" class="hidden-file" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+          <div class="picker-list" id="aPicked"></div>
+          <button class="btn btn-outline-blue" type="button" id="aAddMore">+ Add more photos, videos, or files</button>
+          <button class="btn btn-primary" type="submit" id="aSubmit">Publish announcement</button>
+          <p class="form-message" id="aStatus" role="status"></p>
+        </form>
+        <div class="dash-card">
+          <h2>Published announcements</h2>
+          <div class="admin-list" id="aList">Loading...</div>
+          <h2 class="archive-heading">Archive <small>Hidden from residents · never expires · can be restored</small></h2>
+          <div class="admin-list" id="aArchive">Loading...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Events -->
+    <section class="dash-panel hidden" id="tab-events" role="tabpanel">
+      <div class="dash-grid">
+        <form id="eventForm" class="dash-card admin-form">
+          <h2>Add an event</h2>
+          <label for="eTitle">Event name <span class="required">*</span></label>
+          <input id="eTitle" maxlength="140" required placeholder="e.g. Free medical mission">
+          <div class="two-col">
+            <div><label for="eDate">Date <span class="required">*</span></label><input id="eDate" type="date" required></div>
+            <div><label for="eTime">Time <span class="optional">(optional)</span></label><input id="eTime" type="time"></div>
+          </div>
+          <label for="eLocation">Location <span class="required">*</span></label>
+          <input id="eLocation" maxlength="140" required placeholder="e.g. Barangay Hall">
+          <label for="eDescription">Details <span class="optional">(optional)</span></label>
+          <textarea id="eDescription" maxlength="600" rows="3" placeholder="Who should come, what to bring..."></textarea>
+          <label>Photos, videos, or files <span class="optional">(optional)</span></label>
+          <input id="eFiles" class="hidden-file" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+          <div class="picker-list" id="ePicked"></div>
+          <button class="btn btn-outline-blue" type="button" id="eAddMore">+ Add more photos, videos, or files</button>
+          <button class="btn btn-primary" type="submit" id="eSubmit">Add event</button>
+          <p class="form-message" id="eStatus" role="status"></p>
+        </form>
+        <div class="dash-card">
+          <h2>Upcoming events</h2>
+          <div class="admin-list" id="eList">Loading...</div>
+          <h2 class="archive-heading">Archive <small>Hidden from residents · never expires · can be restored</small></h2>
+          <div class="admin-list" id="eArchive">Loading...</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Guide AI -->
+    <section class="dash-panel hidden" id="tab-guides" role="tabpanel">
+      <div class="dash-grid">
+        <form id="guideForm" class="dash-card admin-form">
+          <h2>Guide the AI</h2>
+          <p class="help-text">Teach the assistant how an event or service works. When a resident's question contains one of your keywords, the assistant gives your answer in a polite, formal tone. Add a video demo or guide pictures and a <strong>“Click for video demo”</strong> button appears under the answer.</p>
+          <label for="gTopic">Topic <span class="required">*</span></label>
+          <input id="gTopic" maxlength="100" required placeholder="e.g. How to use the free printing service">
+          <label for="gKeywords">Keywords residents may use <span class="required">*</span></label>
+          <input id="gKeywords" maxlength="300" required placeholder="e.g. print, printing, printer, xerox">
+          <small class="field-hint">Separate with commas. Include different ways residents may say it.</small>
+          <label for="gAnswer">What should the AI say? <span class="required">*</span></label>
+          <textarea id="gAnswer" maxlength="1200" rows="5" required placeholder="Write the steps or rules in plain words. The assistant will present them politely."></textarea>
+          <label>Video demo or guide pictures <span class="optional">(you provide the file)</span></label>
+          <input id="gFiles" class="hidden-file" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
+          <div class="picker-list" id="gPicked"></div>
+          <button class="btn btn-outline-blue" type="button" id="gAddMore">+ Add more photos, videos, or files</button>
+          <button class="btn btn-primary" type="submit" id="gSubmit">Save guide</button>
+          <p class="form-message" id="gStatus" role="status"></p>
+        </form>
+        <div>
+          <div class="dash-card">
+            <h2>Active guides</h2>
+            <div class="admin-list" id="gList">Loading...</div>
+            <h2 class="archive-heading">Archive <small>Not used by the AI · can be restored</small></h2>
+            <div class="admin-list" id="gArchive">Loading...</div>
+          </div>
+          <div class="dash-card test-card">
+            <h2>Try the assistant</h2>
+            <p class="help-text">Type a question the way a resident would, to check your guide.</p>
+            <div class="test-row"><input id="testQuestion" placeholder="e.g. How do I use the printer?"><button class="btn btn-primary" id="testAsk" type="button">Ask</button></div>
+            <div class="test-answer" id="testAnswer"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Suggestions -->
+    <section class="dash-panel hidden" id="tab-suggestions" role="tabpanel">
+      <div class="dash-card">
+        <div class="dash-card-head"><h2>Resident suggestions</h2><button class="text-link" id="refreshSuggestions" type="button">Refresh</button></div>
+        <div class="admin-list" id="sList">Loading...</div>
+      </div>
+    </section>
+
+    <!-- Problem reports -->
+    <section class="dash-panel hidden" id="tab-reports" role="tabpanel">
+      <div class="dash-card">
+        <div class="dash-card-head"><h2>Problems reported by residents</h2><button class="text-link" id="refreshReports" type="button">Refresh</button></div>
+        <div class="admin-list" id="rList">Loading...</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="viewer hidden" id="viewer" role="dialog" aria-modal="true" aria-label="Preview">
+    <div class="viewer-bar"><span class="viewer-title" id="viewerTitle"></span><a class="viewer-open" id="viewerOpen" href="#" target="_blank" rel="noopener">Open in new tab</a><button class="viewer-close" type="button" id="viewerClose" aria-label="Close">×</button></div>
+    <div class="viewer-stage" id="viewerStage"></div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

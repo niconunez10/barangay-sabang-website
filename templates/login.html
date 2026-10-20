@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Admin login | Barangay Sabang</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <aside class="auth-side">
+      <a class="brand brand-on-dark" href="/" aria-label="Back to the Barangay Sabang website">
+        <div class="brand-mark"><span>BS</span></div>
+        <div class="brand-copy"><strong>BARANGAY SABANG</strong><small>INFORMATION &amp; RESIDENT SERVICES</small></div>
+      </a>
+      <div class="auth-side-copy">
+        <h1>Manage what residents see.</h1>
+        <p>Post announcements, update the events calendar, and read suggestions sent through the portal.</p>
+      </div>
+      <p class="auth-side-note">Authorized barangay staff only.</p>
+      <div class="auth-stripe" aria-hidden="true"></div>
+    </aside>
+
+    <section class="auth-panel">
+      <form class="auth-card" method="post" action="" autocomplete="on">
+        <h2>Admin login</h2>
+        <p class="auth-sub">Enter your admin account to continue.</p>
+
+        {% if error %}
+        <div class="auth-error" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required autofocus maxlength="60">
+
+        <label for="password">Password</label>
+        <div class="password-row">
+          <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+          <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+
+        <button class="btn btn-primary auth-submit" type="submit">Log in</button>
+        <a class="auth-back" href="/">Back to the public website</a>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const pw = document.getElementById("password");
+    const toggle = document.getElementById("togglePassword");
+    toggle.addEventListener("click", () => {
+      const show = pw.type === "password";
+      pw.type = show ? "text" : "password";
+      toggle.textContent = show ? "Hide" : "Show";
+      toggle.setAttribute("aria-pressed", String(show));
+      toggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
+  </script>
+</body>
+</html>
