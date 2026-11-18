@@ -8,17 +8,12 @@ Colors: white, blue, and red.
 ```powershell
 py -m venv venv
 .\venv\Scripts\Activate.ps1
-<<<<<<< HEAD
 pip install -r requirements-local.txt
-=======
-pip install -r requirements.txt
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 py app.py
 ```
 
 Then open http://127.0.0.1:5000
 
-<<<<<<< HEAD
 The local website needs no `.env` AI credentials, web-search keys, model download,
 or pretrained weights. Its main components are:
 
@@ -35,49 +30,6 @@ static/js/main.js      Chat UI, quick replies, browser speech controls
 instance/barangay.db  Created automatically: content_records, services, chat_context
 ```
 
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
-## Admin login
-
-- Page: http://127.0.0.1:5000/admin/login (or the "Admin login" link in the footer)
-- Username: `admin`
-- Password: `admin`
-
-After logging in you can post announcements and events with photos, videos, and files,
-add them to the archive (and restore them), teach the AI assistant ("Guide AI"),
-read resident suggestions, and read problem reports. Logging out ends the session.
-
-See **STEP_BY_STEP_GUIDE.md** for how every feature works and how to test it.
-
-To use different credentials without editing code, set environment variables
-before starting the server:
-
-```powershell
-$env:ADMIN_USERNAME = "myname"
-$env:ADMIN_PASSWORD = "a-strong-password"
-$env:SECRET_KEY = "any-long-random-text"
-py app.py
-```
-
-## What is protected
-
-- Admin pages and `/api/admin/*` require login (401 or redirect otherwise).
-- Password is checked against a hash, not stored as plain text.
-- 5 wrong logins lock that device for 5 minutes.
-- Admin actions need a CSRF token, so other websites cannot trigger them.
-- Login session expires after 2 hours.
-
-## Where your data is saved
-
-Everything (announcements, events, archive, AI guides, suggestions, problem reports)
-is saved to `instance/data.json`, and uploaded photos/videos/files go to
-`instance/uploads/`. Both survive a restart. **Back up the whole `instance` folder.**
-It is ignored by git, so uploads are never committed.
-<<<<<<< HEAD
-The assistant's SQLite index and its session record pointer are saved in
-`instance/barangay.db`; it never stores the resident's question text.
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 ## Optional: ping the developers when a problem is reported
 
@@ -100,7 +52,6 @@ Then open `http://YOUR-PC-IP:5000` on the phone (find the IP with `ipconfig`).
 
 - `admin` / `admin` is a demo password. Change it before anyone else can reach the site.
 - Single admin account only. A real database (PostgreSQL) and roles come next.
-<<<<<<< HEAD
 - The website assistant is fully local: custom preprocessing, synonyms/fuzzy matching, TF-IDF/cosine retrieval, and a Naive Bayes intent classifier implemented in `ai_engine.py`. It does not call an AI or search API and does not load pretrained model weights.
 - Only published Guide AI entries, services, announcements, and events are indexed in `instance/barangay.db`. Admin changes rebuild the index. The four demo sample posts in SQLite are drafts and are never shown to residents.
 - Answers are templates grounded in matched local records. The assistant does not generate facts; if the similarity is below 0.35 or the requested field is absent, it says that the records do not contain the answer.
@@ -177,8 +128,3 @@ including the resident's message text. Current-events responses include source
 URLs and publication dates. Messenger limits quick-reply titles to 20 characters,
 so the button is labeled **Talk to Secretary** while its payload remains
 `TALK_TO_BARANGAY_SECRETARY`.
-=======
-- The chat assistant uses keyword matching plus the guides you write, not a trained AI model.
-- Event dates and service details are sample content, not official information.
-- Do not deploy publicly until it uses HTTPS, a database, and a strong password.
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd

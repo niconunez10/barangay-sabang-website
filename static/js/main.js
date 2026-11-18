@@ -1,34 +1,30 @@
-// Remember the last few JavaScript errors so a "Report a problem" can include them.
 window.__jsErrors = [];
-function rememberError(text) {
-  window.__jsErrors.push(String(text).slice(0, 300));
-  if (window.__jsErrors.length > 5) window.__jsErrors.shift();
-}
-window.addEventListener("error", e => rememberError(`${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno})`));
-window.addEventListener("unhandledrejection", e => rememberError("Promise: " + (e.reason && e.reason.message || e.reason)));
+window.addEventListener("error", event => {
+  window.__jsErrors.push(`${event.message} (${(event.filename || "").split("/").pop()}:${event.lineno})`.slice(0, 300));
+  window.__jsErrors = window.__jsErrors.slice(-5);
+});
+window.addEventListener("unhandledrejection", event => {
+  window.__jsErrors.push(`Promise: ${(event.reason && event.reason.message) || event.reason}`.slice(0, 300));
+  window.__jsErrors = window.__jsErrors.slice(-5);
+});
 
-const $ = (selector) => document.querySelector(selector);
-const $$ = (selector) => [...document.querySelectorAll(selector)];
+const $ = selector => document.querySelector(selector);
+const $$ = selector => [...document.querySelectorAll(selector)];
+
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  })[char]);
+}
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
     headers: { "Content-Type": "application/json" },
     ...options
   });
-<<<<<<< HEAD
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || data.detail || "Something went wrong. Please try again.");
-=======
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || "Something went wrong. Please try again.");
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
+  if (!response.ok) throw new Error(data.message || data.detail || "Please try again.");
   return data;
-}
-
-function escapeHTML(value = "") {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  })[char]);
 }
 
 function showToast(message) {
@@ -39,162 +35,107 @@ function showToast(message) {
   showToast.timer = setTimeout(() => toast.classList.remove("show"), 2800);
 }
 
-/* ---------------------------------------------------------------
-   MEDIA: sliders on cards, hover preview, and the expanded viewer
----------------------------------------------------------------- */
-const mediaStore = {};            // "announcement-3" -> item, so the viewer can find it
+function skeletonCard(type = "") {
+  return `<div class="skeleton-card ${type}" aria-label="Loading"></div>`;
+}
+
+function errorState(loadFunction) {
+  return `<div class="error-state"><strong>Could not load this information.</strong><p>Please check your connection and try again.</p><button class="btn btn-primary" type="button" data-retry="${loadFunction}">Retry</button></div>`;
+}
+
+const mediaStore = {};
 const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 function formatSize(bytes) {
-  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + " MB";
-  return Math.max(1, Math.round(bytes / 1024)) + " KB";
-}
-function fileIcon(name) {
-  const ext = name.split(".").pop().toLowerCase();
-  return { pdf: "PDF", doc: "DOC", docx: "DOC", xls: "XLS", xlsx: "XLS", ppt: "PPT", pptx: "PPT", txt: "TXT", csv: "CSV" }[ext] || "FILE";
+  const size = Number(bytes) || 0;
+  return size >= 1048576 ? `${(size / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(size / 1024))} KB`;
 }
 
-// Photos and videos go in the slider; documents become file chips.
+function fileIcon(name) {
+  const ext = String(name).split(".").pop().toLowerCase();
+  return ({ pdf: "PDF", doc: "DOC", docx: "DOC", xls: "XLS", xlsx: "XLS", ppt: "PPT", pptx: "PPT", txt: "TXT", csv: "CSV" })[ext] || "FILE";
+}
+
 function mediaHTML(key, item) {
-  const visual = (item.media || []).filter(m => m.kind !== "file");
-  const files = (item.media || []).filter(m => m.kind === "file");
+  const media = item.media || [];
+  const visual = media.filter(value => value.kind !== "file");
+  const files = media.filter(value => value.kind === "file");
   let html = "";
   if (visual.length) {
-    const slides = visual.map((m, i) => m.kind === "video"
-      ? `<div class="media-slide" data-index="${i}"><video src="${escapeHTML(m.url)}#t=0.1" muted loop playsinline preload="metadata" aria-label="${escapeHTML(m.name)}"></video><span class="play-badge" aria-hidden="true">▶</span></div>`
-      : `<div class="media-slide" data-index="${i}"><img src="${escapeHTML(m.url)}" alt="${escapeHTML(m.name)}" loading="lazy"></div>`).join("");
-    const many = visual.length > 1;
+    const slides = visual.map((value, index) => value.kind === "video"
+      ? `<div class="media-slide" data-index="${index}"><video src="${escapeHTML(value.url)}#t=0.1" muted loop playsinline preload="metadata" aria-label="${escapeHTML(value.name)}"></video></div>`
+      : `<div class="media-slide" data-index="${index}"><img src="${escapeHTML(value.url)}" alt="${escapeHTML(value.name)}" loading="lazy"></div>`
+    ).join("");
     html += `<div class="media-slider" data-key="${key}">
       <div class="media-track">${slides}</div>
-      ${many ? `<button type="button" class="slider-btn prev" aria-label="Previous photo or video">‹</button>
-      <button type="button" class="slider-btn next" aria-label="Next photo or video">›</button>
-      <div class="slider-dots">${visual.map((_, i) => `<i class="${i === 0 ? "active" : ""}"></i>`).join("")}</div>
-      <span class="media-count">1/${visual.length}</span>` : ""}
-      <button type="button" class="expand-btn" data-expand aria-label="Expanded view">⤢ Expand</button>
+      ${visual.length > 1 ? `<button type="button" class="slider-btn prev" aria-label="Previous">‹</button><button type="button" class="slider-btn next" aria-label="Next">›</button><span class="media-count">1/${visual.length}</span>` : ""}
+      <button type="button" class="expand-btn" data-expand aria-label="Expand media">Expand</button>
     </div>`;
   }
   if (files.length) {
-    html += `<div class="file-list">${files.map(m => `
-      <div class="file-chip"><span class="file-badge">${fileIcon(m.name)}</span>
-        <span class="file-name"><strong>${escapeHTML(m.name)}</strong><small>${formatSize(m.size)}</small></span>
-        <button type="button" class="file-expand" data-expand-file="${escapeHTML(m.id)}">Expand</button>
-        <a class="file-download" href="${escapeHTML(m.url)}" download="${escapeHTML(m.name)}">Download</a>
+    html += `<div class="file-list">${files.map(value => `
+      <div class="file-chip">
+        <span class="file-badge">${fileIcon(value.name)}</span>
+        <span class="file-name"><strong>${escapeHTML(value.name)}</strong><small>${formatSize(value.size)}</small></span>
+        <button type="button" class="file-expand" data-expand-file="${escapeHTML(value.id)}">Expand</button>
+        <a class="file-download" href="${escapeHTML(value.url)}" download="${escapeHTML(value.name)}">Download</a>
       </div>`).join("")}</div>`;
   }
   return html;
 }
 
-// ---- slider behaviour (works by touch-swipe, arrows, and hover)
 function sliderIndex(slider) {
   const track = slider.querySelector(".media-track");
   return Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
 }
-function updateSlider(slider) {
-  const i = sliderIndex(slider);
-  slider.querySelectorAll(".slider-dots i").forEach((d, n) => d.classList.toggle("active", n === i));
-  const count = slider.querySelector(".media-count");
-  if (count) count.textContent = `${i + 1}/${slider.querySelectorAll(".media-slide").length}`;
-  slider.querySelectorAll("video").forEach((v, n) => { if (n !== i || !slider.matches(":hover")) v.pause(); });
-  if (slider.matches(":hover") && canHover) {
-    const cur = slider.querySelectorAll(".media-slide")[i].querySelector("video");
-    if (cur) cur.play().catch(() => {});
-  }
-}
-function goSlide(slider, delta, wrap) {
+
+function goSlide(slider, delta) {
   const track = slider.querySelector(".media-track");
   const total = slider.querySelectorAll(".media-slide").length;
-  let next = sliderIndex(slider) + delta;
-  if (wrap) next = (next + total) % total; else next = Math.min(total - 1, Math.max(0, next));
+  const next = (sliderIndex(slider) + delta + total) % total;
   track.scrollTo({ left: next * track.clientWidth, behavior: "smooth" });
 }
 
-document.addEventListener("scroll", event => {
-  const track = event.target;
-  if (track.classList && track.classList.contains("media-track")) {
-    cancelAnimationFrame(track._raf);
-    track._raf = requestAnimationFrame(() => updateSlider(track.closest(".media-slider")));
-  }
-}, true);
-
-document.addEventListener("click", event => {
-  const slider = event.target.closest(".media-slider");
-  const chip = event.target.closest("[data-expand-file]");
-  if (chip) {
-    const card = chip.closest("[data-key]");
-    const item = mediaStore[card.dataset.key];
-    const all = orderedMedia(item);
-    openViewer(all, all.findIndex(m => m.id === chip.dataset.expandFile), item.title);
-    return;
-  }
-  if (!slider) return;
-  const item = mediaStore[slider.dataset.key];
-  if (event.target.closest(".slider-btn")) {
-    event.stopPropagation();
-    goSlide(slider, event.target.closest(".slider-btn").classList.contains("next") ? 1 : -1, true);
-    return;
-  }
-  // Tapping the media or the Expand button opens the large view.
-  openViewer(orderedMedia(item), sliderIndex(slider), item.title);
-});
-
-// Hover preview on computers: play videos silently and rotate through photos.
-document.addEventListener("mouseover", event => {
-  if (!canHover) return;
-  const card = event.target.closest(".announcement-card, .event-card");
-  if (!card || card._hovering) return;
-  const slider = card.querySelector(".media-slider");
-  if (!slider) return;
-  card._hovering = true;
-  updateSlider(slider);
-  if (slider.querySelectorAll(".media-slide").length > 1) {
-    card._timer = setInterval(() => {
-      const cur = slider.querySelectorAll(".media-slide")[sliderIndex(slider)].querySelector("video");
-      if (cur && !cur.ended && !cur.paused && cur.currentTime < cur.duration - 0.3) return; // let the video finish
-      goSlide(slider, 1, true);
-    }, 2400);
-  }
-});
-document.addEventListener("mouseout", event => {
-  const card = event.target.closest(".announcement-card, .event-card");
-  if (!card || !card._hovering || card.contains(event.relatedTarget)) return;
-  card._hovering = false;
-  clearInterval(card._timer);
-  card.querySelectorAll("video").forEach(v => v.pause());
-});
-
-// ---- expanded viewer (photos, videos, PDFs, other files)
-function orderedMedia(item) {
-  const media = item.media || [];
-  return [...media.filter(m => m.kind !== "file"), ...media.filter(m => m.kind === "file")];
-}
 const viewer = $("#viewer");
 const viewerState = { items: [], index: 0, opener: null, touchX: null };
 
+function orderedMedia(item) {
+  const media = item.media || [];
+  return [...media.filter(value => value.kind !== "file"), ...media.filter(value => value.kind === "file")];
+}
+
 function renderViewer() {
-  const m = viewerState.items[viewerState.index];
+  const media = viewerState.items[viewerState.index];
   const stage = $("#viewerStage");
   stage.innerHTML = "";
   let node;
-  if (m.kind === "image") {
-    node = document.createElement("img"); node.src = m.url; node.alt = m.name;
-  } else if (m.kind === "video") {
-    node = document.createElement("video"); node.src = m.url; node.controls = true; node.autoplay = true; node.playsInline = true;
-    node.setAttribute("playsinline", "");
-  } else if (m.name.toLowerCase().endsWith(".pdf") && window.innerWidth > 800) {
-    node = document.createElement("iframe"); node.src = m.url; node.title = m.name;
+  if (media.kind === "image") {
+    node = document.createElement("img");
+    node.src = media.url;
+    node.alt = media.name;
+  } else if (media.kind === "video") {
+    node = document.createElement("video");
+    node.src = media.url;
+    node.controls = true;
+    node.autoplay = true;
+    node.playsInline = true;
+  } else if (media.name.toLowerCase().endsWith(".pdf") && window.innerWidth > 800) {
+    node = document.createElement("iframe");
+    node.src = media.url;
+    node.title = media.name;
   } else {
-    node = document.createElement("div"); node.className = "viewer-file";
-    node.innerHTML = `<span class="file-badge big">${fileIcon(m.name)}</span><strong>${escapeHTML(m.name)}</strong><small>${formatSize(m.size)}</small>
-      <a class="btn btn-primary" href="${escapeHTML(m.url)}" target="_blank" rel="noopener">Open file</a>
-      <a class="btn btn-secondary" href="${escapeHTML(m.url)}" download="${escapeHTML(m.name)}">Download</a>`;
+    node = document.createElement("div");
+    node.className = "viewer-file";
+    node.innerHTML = `<span class="file-badge big">${fileIcon(media.name)}</span><strong>${escapeHTML(media.name)}</strong><small>${formatSize(media.size)}</small><a class="btn btn-primary" href="${escapeHTML(media.url)}" target="_blank" rel="noopener">Open file</a><a class="btn btn-secondary" href="${escapeHTML(media.url)}" download="${escapeHTML(media.name)}">Download</a>`;
   }
   stage.appendChild(node);
   $("#viewerCount").textContent = viewerState.items.length > 1 ? `${viewerState.index + 1} / ${viewerState.items.length}` : "";
-  $("#viewerOpen").href = m.url;
+  $("#viewerOpen").href = media.url;
   const multi = viewerState.items.length > 1;
   $("#viewerPrev").classList.toggle("hidden", !multi);
   $("#viewerNext").classList.toggle("hidden", !multi);
 }
+
 function openViewer(items, index = 0, title = "") {
   if (!items.length) return;
   viewerState.items = items;
@@ -206,51 +147,76 @@ function openViewer(items, index = 0, title = "") {
   document.documentElement.classList.add("no-scroll");
   $("#viewerClose").focus();
 }
+
 function closeViewer() {
   if (viewer.classList.contains("hidden")) return;
   viewer.classList.add("hidden");
-  $("#viewerStage").innerHTML = "";          // also stops any playing video
+  $("#viewerStage").innerHTML = "";
   document.documentElement.classList.remove("no-scroll");
-  if (viewerState.opener && viewerState.opener.focus) viewerState.opener.focus();
+  if (viewerState.opener?.focus) viewerState.opener.focus();
 }
+
 function stepViewer(delta) {
-  const n = viewerState.items.length;
-  if (n < 2) return;
-  viewerState.index = (viewerState.index + delta + n) % n;
+  if (viewerState.items.length < 2) return;
+  viewerState.index = (viewerState.index + delta + viewerState.items.length) % viewerState.items.length;
   renderViewer();
 }
+
 $("#viewerClose").addEventListener("click", closeViewer);
 $("#viewerPrev").addEventListener("click", () => stepViewer(-1));
 $("#viewerNext").addEventListener("click", () => stepViewer(1));
 viewer.addEventListener("click", event => { if (event.target.id === "viewerStage") closeViewer(); });
-viewer.addEventListener("touchstart", e => { viewerState.touchX = e.touches[0].clientX; }, { passive: true });
-viewer.addEventListener("touchend", e => {
+viewer.addEventListener("touchstart", event => { viewerState.touchX = event.touches[0].clientX; }, { passive: true });
+viewer.addEventListener("touchend", event => {
   if (viewerState.touchX === null) return;
-  const dx = e.changedTouches[0].clientX - viewerState.touchX;
+  const difference = event.changedTouches[0].clientX - viewerState.touchX;
   viewerState.touchX = null;
-  if (Math.abs(dx) > 60) stepViewer(dx < 0 ? 1 : -1);
+  if (Math.abs(difference) > 60) stepViewer(difference < 0 ? 1 : -1);
+});
+
+document.addEventListener("click", event => {
+  const slider = event.target.closest(".media-slider");
+  const fileButton = event.target.closest("[data-expand-file]");
+  if (fileButton) {
+    const card = fileButton.closest("[data-key]");
+    const item = mediaStore[card.dataset.key];
+    const media = orderedMedia(item);
+    openViewer(media, media.findIndex(value => value.id === fileButton.dataset.expandFile), item.title);
+    return;
+  }
+  if (!slider) return;
+  const item = mediaStore[slider.dataset.key];
+  if (event.target.closest(".slider-btn")) {
+    event.stopPropagation();
+    goSlide(slider, event.target.closest(".slider-btn").classList.contains("next") ? 1 : -1);
+  } else {
+    openViewer(orderedMedia(item), sliderIndex(slider), item.title);
+  }
 });
 
 async function loadAnnouncements() {
-  const query = $("#announcementSearch").value.trim();
-  const category = $("#categoryFilter").value;
   const grid = $("#announcementGrid");
   try {
+    const query = $("#announcementSearch").value.trim();
+    const category = $("#categoryFilter").value;
     const items = await api(`/api/announcements?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}`);
-    $("#statAnnouncements").textContent = String(items.length).padStart(2, "0");
     $("#announcementEmpty").classList.toggle("hidden", items.length !== 0);
     grid.classList.toggle("hidden", items.length === 0);
-    items.forEach(item => { mediaStore["announcement-" + item.id] = item; });
+    if (!items.length) return;
+    items.forEach(item => { mediaStore[`announcement-${item.id}`] = item; });
     grid.innerHTML = items.map(item => `
-      <article class="announcement-card ${item.media.length ? "has-media" : ""}" data-key="announcement-${item.id}">
-        ${mediaHTML("announcement-" + item.id, item)}
+      <article class="announcement-card reveal ${item.media?.length ? "has-media" : ""}" data-key="announcement-${item.id}">
+        ${mediaHTML(`announcement-${item.id}`, item)}
         <div class="card-topline"><span class="category-pill">${escapeHTML(item.category)}</span><span class="card-date">${escapeHTML(item.date)}</span></div>
         <h3>${escapeHTML(item.title)}</h3>
         <p>${escapeHTML(item.description)}</p>
-        <div class="card-footer"><span>Community update</span><span>↗</span></div>
+        <div class="card-footer"><span>Community update</span><span aria-hidden="true">→</span></div>
       </article>`).join("");
+    setupReveal();
   } catch (error) {
-    grid.innerHTML = `<div class="loading-card">Could not load announcements: ${escapeHTML(error.message)}</div>`;
+    grid.classList.remove("hidden");
+    $("#announcementEmpty").classList.add("hidden");
+    grid.innerHTML = errorState("announcements");
   }
 }
 
@@ -258,52 +224,204 @@ async function loadEvents() {
   const grid = $("#eventsGrid");
   try {
     const items = await api("/api/events");
-    $("#statEvents").textContent = String(items.length).padStart(2, "0");
-    items.forEach(item => { mediaStore["event-" + item.id] = item; });
-    grid.innerHTML = items.map(item => `
-      <article class="event-card ${item.media.length ? "has-media" : ""}" data-key="event-${item.id}">
+    items.forEach(item => { mediaStore[`event-${item.id}`] = item; });
+    grid.innerHTML = items.length ? items.map(item => `
+      <article class="event-card reveal ${item.media?.length ? "has-media" : ""}" data-key="event-${item.id}">
         <div class="event-date"><strong>${escapeHTML(item.day)}</strong><small>${escapeHTML(item.month)}</small></div>
-        <div class="event-info"><h3>${escapeHTML(item.title)}</h3>
-          <div class="event-meta"><span>◷ ${escapeHTML(item.date)} · ${escapeHTML(item.time)}</span><span>⌖ ${escapeHTML(item.location)}</span></div>
-          <p>${escapeHTML(item.description)}</p>
-          ${mediaHTML("event-" + item.id, item)}
-        </div><span class="event-tag">SAMPLE</span>
-      </article>`).join("") || `<div class="loading-card">No events have been added.</div>`;
-  } catch (error) { grid.innerHTML = `<div class="loading-card">${escapeHTML(error.message)}</div>`; }
+        <div class="event-info">
+          <h3>${escapeHTML(item.title)}</h3>
+          <div class="event-meta"><span>${escapeHTML(item.date)} · ${escapeHTML(item.time)}</span><span>${escapeHTML(item.location)}</span></div>
+          ${mediaHTML(`event-${item.id}`, item)}
+        </div>
+      </article>`).join("") : `<div class="empty-state"><strong>No upcoming events.</strong><p>Check back for new activities.</p></div>`;
+    setupReveal();
+  } catch (error) {
+    grid.innerHTML = errorState("events");
+  }
 }
 
 async function loadServices() {
   const grid = $("#servicesGrid");
   try {
     const items = await api("/api/services");
-    $("#statServices").textContent = String(items.length).padStart(2, "0");
-    grid.innerHTML = items.map((item, index) => `
-      <article class="service-card">
+    grid.innerHTML = items.length ? items.map(item => `
+      <article class="service-card reveal">
         <div class="service-icon">${escapeHTML(item.icon)}</div>
         <span class="service-tag">${escapeHTML(item.tag)}</span>
         <h3>${escapeHTML(item.name)}</h3>
         <p>${escapeHTML(item.description)}</p>
-        <button type="button" data-service="${index}">View service details <span>→</span></button>
-      </article>`).join("");
-    $$("#servicesGrid [data-service]").forEach(button => button.addEventListener("click", () => {
-      const item = items[Number(button.dataset.service)];
-      showToast(item.name + ": " + item.details);
-    }));
-  } catch (error) { grid.innerHTML = `<div class="loading-card">${escapeHTML(error.message)}</div>`; }
+        <div class="service-details">
+          <p><strong>Office hours:</strong> Confirm with the barangay office.</p>
+          <p><strong>Requirements:</strong> ${escapeHTML(item.details || "Confirm with the barangay office.")}</p>
+        </div>
+      </article>`).join("") : `<div class="empty-state"><strong>No resident services yet.</strong><p>Check back for available services.</p></div>`;
+    setupReveal();
+  } catch (error) {
+    grid.innerHTML = errorState("services");
+  }
 }
+
+let revealObserver;
+function setupReveal() {
+  if (!("IntersectionObserver" in window)) {
+    $$(".reveal").forEach(card => card.classList.add("visible"));
+    return;
+  }
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+  }
+  $$(".reveal").forEach((card, index) => {
+    card.style.transitionDelay = `${Math.min(index % 3, 2) * 80}ms`;
+    revealObserver.observe(card);
+  });
+}
+
+document.addEventListener("click", event => {
+  const retry = event.target.closest("[data-retry]");
+  if (!retry) return;
+  const loader = { announcements: loadAnnouncements, events: loadEvents, services: loadServices }[retry.dataset.retry];
+  if (loader) {
+    retry.closest(".error-state").innerHTML = skeletonCard();
+    loader();
+  }
+});
+
+const header = $("#siteHeader");
+window.addEventListener("scroll", () => header.classList.toggle("scrolled", window.scrollY > 24), { passive: true });
+header.classList.add("seal-load");
+
+const heroPhotos = $$(".hero-photo");
+if (heroPhotos.length > 1 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  let activeHeroPhoto = 0;
+  window.setInterval(() => {
+    heroPhotos[activeHeroPhoto].classList.remove("is-active");
+    heroPhotos[activeHeroPhoto].setAttribute("aria-hidden", "true");
+    activeHeroPhoto = (activeHeroPhoto + 1) % heroPhotos.length;
+    heroPhotos[activeHeroPhoto].classList.add("is-active");
+    heroPhotos[activeHeroPhoto].removeAttribute("aria-hidden");
+  }, 5000);
+}
+
+const mobileMenu = $("#mobileMenuBtn");
+mobileMenu.addEventListener("click", () => {
+  const open = $("#navLinks").classList.toggle("open");
+  mobileMenu.setAttribute("aria-expanded", String(open));
+});
+$$(".nav-link").forEach(link => link.addEventListener("click", () => {
+  $("#navLinks").classList.remove("open");
+  mobileMenu.setAttribute("aria-expanded", "false");
+  $$(".nav-link").forEach(other => other.classList.remove("active"));
+  link.classList.add("active");
+}));
 
 $("#announcementSearch").addEventListener("input", loadAnnouncements);
 $("#categoryFilter").addEventListener("change", loadAnnouncements);
+
+const feedbackType = $("#feedbackType");
+const reportDetailsGroup = $("#reportDetailsGroup");
+feedbackType.addEventListener("change", () => {
+  const isProblem = feedbackType.value === "Problem";
+  reportDetailsGroup.classList.toggle("hidden", !isProblem);
+  $("#reportDetails").required = isProblem;
+});
 
 $("#suggestionMessage").addEventListener("input", event => {
   $("#charCount").textContent = event.target.value.length;
 });
 
+function loadQueue() {
+  try { return JSON.parse(localStorage.getItem("pendingReports") || "[]"); } catch (error) { return []; }
+}
+
+function saveQueue(queue) {
+  try { localStorage.setItem("pendingReports", JSON.stringify(queue.slice(-5))); } catch (error) {}
+}
+
+async function sendReport(payload) {
+  const response = await fetch("/api/problem-reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.message || "The report could not be sent.");
+    error.permanent = response.status >= 400 && response.status < 500;
+    throw error;
+  }
+  return data;
+}
+
+let flushing = false;
+async function flushQueue() {
+  if (flushing) return;
+  const queue = loadQueue();
+  if (!queue.length) return;
+  flushing = true;
+  saveQueue([]);
+  const remaining = [];
+  for (const payload of queue) {
+    try { await sendReport(payload); } catch (error) { if (!error.permanent) remaining.push(payload); }
+  }
+  saveQueue([...remaining, ...loadQueue()]);
+  flushing = false;
+}
+window.addEventListener("online", flushQueue);
+
 $("#suggestionForm").addEventListener("submit", async event => {
   event.preventDefault();
   const status = $("#suggestionStatus");
+  const button = $("#suggestionSubmit");
+  button.disabled = true;
+  button.className = "btn btn-primary submit-button loading";
   status.textContent = "Sending...";
   status.className = "form-message";
+
+  if (feedbackType.value === "Problem") {
+    const payload = {
+      type: "Something is not working",
+      details: $("#reportDetails").value,
+      contact: $("#reportContact").value,
+      page_url: location.href,
+      user_agent: $("#reportTech").checked ? navigator.userAgent : "",
+      viewport: $("#reportTech").checked ? `${window.innerWidth}x${window.innerHeight}` : "",
+      js_errors: $("#reportTech").checked ? window.__jsErrors : []
+    };
+    try {
+      const result = await sendReport(payload);
+      status.textContent = result.message;
+      status.className = "form-message success";
+      button.className = "btn btn-primary submit-button success";
+      event.target.reset();
+      $("#charCount").textContent = "0";
+      reportDetailsGroup.classList.add("hidden");
+      setTimeout(() => { button.className = "btn btn-primary submit-button"; }, 1800);
+    } catch (error) {
+      if (error.permanent) {
+        status.textContent = error.message;
+        status.className = "form-message error";
+        button.className = "btn btn-primary submit-button";
+      } else {
+        saveQueue([...loadQueue(), payload]);
+        status.textContent = "Your report was saved on this device. It will be sent when the connection returns.";
+        status.className = "form-message success";
+        button.className = "btn btn-primary submit-button success";
+        event.target.reset();
+        reportDetailsGroup.classList.add("hidden");
+      }
+    } finally {
+      button.disabled = false;
+    }
+    return;
+  }
+
   const payload = {
     name: $("#suggestionName").value,
     subject: $("#suggestionSubject").value,
@@ -313,317 +431,86 @@ $("#suggestionForm").addEventListener("submit", async event => {
     const result = await api("/api/suggestions", { method: "POST", body: JSON.stringify(payload) });
     status.textContent = result.message;
     status.className = "form-message success";
+    button.className = "btn btn-primary submit-button success";
     event.target.reset();
     $("#charCount").textContent = "0";
+    setTimeout(() => { button.className = "btn btn-primary submit-button"; }, 1800);
   } catch (error) {
     status.textContent = error.message;
     status.className = "form-message error";
+    button.className = "btn btn-primary submit-button";
+  } finally {
+    button.disabled = false;
   }
 });
 
 const chatModal = $("#chatModal");
-<<<<<<< HEAD
-const chatForm = $("#chatForm");
 const chatInput = $("#chatInput");
-const chatSendButton = $("#chatSendButton");
+const chatForm = $("#chatForm");
 let chatBusy = false;
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
-function openChat() { chatModal.classList.remove("hidden"); setTimeout(() => $("#chatInput").focus(), 100); }
-function closeChat() { chatModal.classList.add("hidden"); }
-$("#openChatTop").addEventListener("click", openChat);
-$("#openChatBanner").addEventListener("click", openChat);
-$("#openChatFab").addEventListener("click", openChat);
-$("#closeChat").addEventListener("click", closeChat);
-chatModal.addEventListener("click", event => { if (event.target === chatModal) closeChat(); });
 
-<<<<<<< HEAD
-function speakChatMessage(text) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = /[ñ¿¡]|(?:\bpo\b|\bsaan\b|\bkailan\b)/i.test(text) ? "fil-PH" : "en-PH";
-  window.speechSynthesis.speak(utterance);
+function openChat() {
+  chatModal.classList.remove("hidden");
+  $("#openChatFab").classList.add("opened");
+  setTimeout(() => chatInput.focus(), 100);
 }
 
-function appendChat(text, type, media = [], sources = []) {
-=======
-function appendChat(text, type, media = []) {
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
+function closeChat() {
+  chatModal.classList.add("hidden");
+  $("#openChatFab").focus();
+}
+
+function addChatBubble(text, type = "bot") {
   const bubble = document.createElement("div");
   bubble.className = `chat-bubble ${type === "user" ? "user-bubble" : "bot-bubble"}`;
   bubble.textContent = text;
-  const box = $("#chatMessages");
-  box.appendChild(bubble);
-<<<<<<< HEAD
-  if (type !== "user" && "speechSynthesis" in window) {
-    const speakButton = document.createElement("button");
-    speakButton.type = "button";
-    speakButton.className = "chat-speak-btn";
-    speakButton.textContent = "🔊 Basahin nang malakas";
-    speakButton.setAttribute("aria-label", "Read this answer aloud");
-    speakButton.addEventListener("click", () => speakChatMessage(text));
-    box.appendChild(speakButton);
-  }
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
-  // Admin-provided demo video and/or guide pictures become buttons under the answer.
-  const videos = media.filter(m => m.kind === "video");
-  const pictures = media.filter(m => m.kind === "image");
-  if (videos.length || pictures.length) {
-    const row = document.createElement("div");
-    row.className = "chat-media-row";
-    if (videos.length) {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "chat-demo-btn"; b.textContent = "▶ Click for video demo";
-      b.addEventListener("click", () => openViewer(videos.map(v => ({ ...v, size: 0 })), 0, "Video demo"));
-      row.appendChild(b);
-    }
-    if (pictures.length) {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "chat-demo-btn alt"; b.textContent = "🖼 View guide pictures";
-      b.addEventListener("click", () => openViewer(pictures.map(v => ({ ...v, size: 0 })), 0, "Guide pictures"));
-      row.appendChild(b);
-    }
-    box.appendChild(row);
-  }
-<<<<<<< HEAD
-  if (sources.length) {
-    const sourceRow = document.createElement("div");
-    sourceRow.className = "chat-source-row";
-    const label = document.createElement("strong");
-    label.textContent = "Official references:";
-    sourceRow.appendChild(label);
-    sources.forEach(source => {
-      const link = document.createElement("a");
-      link.href = source.url;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = source.title || source.url;
-      sourceRow.appendChild(link);
-    });
-    box.appendChild(sourceRow);
-  }
-  box.scrollTop = box.scrollHeight;
+  $("#chatMessages").appendChild(bubble);
+  bubble.scrollIntoView({ block: "nearest" });
 }
 
-const welcomeBubble = $("#chatMessages .bot-bubble");
-if (welcomeBubble && "speechSynthesis" in window) {
-  const speakButton = document.createElement("button");
-  speakButton.type = "button";
-  speakButton.className = "chat-speak-btn";
-  speakButton.textContent = "🔊 Basahin nang malakas";
-  speakButton.setAttribute("aria-label", "Read this welcome aloud");
-  speakButton.addEventListener("click", () => speakChatMessage(welcomeBubble.textContent));
-  $("#chatMessages").appendChild(speakButton);
-}
-
-async function sendChat(message) {
-  if (chatBusy || !message.trim()) return;
+async function sendChat(question) {
+  if (chatBusy || !question.trim()) return;
   chatBusy = true;
-  appendChat(message, "user");
+  addChatBubble(question, "user");
   chatInput.value = "";
-  chatInput.disabled = true;
-  chatSendButton.disabled = true;
-  $("#chatMicButton").disabled = true;
-  const loadingBubble = document.createElement("div");
-  loadingBubble.className = "chat-bubble bot-bubble chat-loading";
-  loadingBubble.setAttribute("role", "status");
-  loadingBubble.textContent = "Nag-iisip ang Barangay AI...";
-  $("#chatMessages").appendChild(loadingBubble);
-  $("#chatMessages").scrollTop = $("#chatMessages").scrollHeight;
+  const loading = document.createElement("div");
+  loading.className = "chat-bubble bot-bubble";
+  loading.textContent = "Please wait...";
+  $("#chatMessages").appendChild(loading);
   try {
-    const result = await api("/api/chat", { method: "POST", body: JSON.stringify({ message }) });
-    loadingBubble.remove();
-    const bubbles = Array.isArray(result.bubbles) ? result.bubbles : [result.reply];
-    bubbles.forEach((reply, index) => appendChat(
-      reply,
-      "bot",
-      index === bubbles.length - 1 ? result.media || [] : [],
-      index === bubbles.length - 1 ? result.sources || [] : []
-    ));
-    renderQuickReplies(result.suggestions);
+    const result = await api("/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ message: question })
+    });
+    loading.remove();
+    addChatBubble(result.reply || "Please contact the barangay office for more information.");
   } catch (error) {
-    loadingBubble.remove();
-    appendChat(error.message, "bot");
+    loading.remove();
+    addChatBubble("The assistant could not respond. Please try again.");
   } finally {
     chatBusy = false;
-    chatInput.disabled = false;
-    chatSendButton.disabled = false;
-    $("#chatMicButton").disabled = false;
-    chatInput.focus();
   }
 }
 
-function renderQuickReplies(suggestions) {
-  const container = $("#quickReplies");
-  const questions = Array.isArray(suggestions) && suggestions.length
-    ? suggestions
-    : ["Mga Bagong Anunsyo", "Schedule ng Event", "Barangay Clearance", "Health Center"];
-  container.replaceChildren(...questions.map(question => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.dataset.question = question;
-    button.textContent = question;
-    return button;
-  }));
-}
-
+$("#openChatFab").addEventListener("click", openChat);
+$("#closeChat").addEventListener("click", closeChat);
+chatModal.addEventListener("click", event => { if (event.target === chatModal) closeChat(); });
 chatForm.addEventListener("submit", event => {
   event.preventDefault();
   sendChat(chatInput.value);
 });
-$("#quickReplies").addEventListener("click", event => {
-  const button = event.target.closest("button[data-question]");
-  if (button) sendChat(button.dataset.question);
-});
-
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const chatMicButton = $("#chatMicButton");
-if (SpeechRecognition) {
-  const recognition = new SpeechRecognition();
-  recognition.lang = "fil-PH";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.addEventListener("result", event => {
-    const transcript = event.results[0][0].transcript.trim();
-    if (transcript) {
-      chatInput.value = transcript;
-      chatInput.focus();
-    }
-    $("#chatVoiceStatus").textContent = "Review your spoken question, then press Send.";
-  });
-  recognition.addEventListener("error", () => {
-    $("#chatVoiceStatus").textContent = "Voice input was unavailable. Please type your question instead.";
-  });
-  chatMicButton.addEventListener("click", () => {
-    if (chatBusy) return;
-    $("#chatVoiceStatus").textContent = "Listening... Speak your question.";
-    try {
-      recognition.start();
-    } catch (error) {
-      $("#chatVoiceStatus").textContent = "Voice input could not start. Please type your question.";
-    }
-  });
-} else {
-  chatMicButton.disabled = true;
-  chatMicButton.title = "Voice input is not supported by this browser.";
-}
-=======
-  box.scrollTop = box.scrollHeight;
-}
-
-async function sendChat(message) {
-  if (!message.trim()) return;
-  appendChat(message, "user");
-  $("#chatInput").value = "";
-  $$(".suggested-questions").forEach(el => el.remove());
-  try {
-    const result = await api("/api/chat", { method: "POST", body: JSON.stringify({ message }) });
-    appendChat(result.reply, "bot", result.media || []);
-  } catch (error) { appendChat(error.message, "bot"); }
-}
-$("#chatForm").addEventListener("submit", event => {
-  event.preventDefault();
-  sendChat($("#chatInput").value);
-});
-$$(".suggested-questions button").forEach(button => button.addEventListener("click", () => sendChat(button.dataset.question)));
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
-
-$("#mobileMenuBtn").addEventListener("click", () => $("#navLinks").classList.toggle("open"));
-$$(".nav-links a").forEach(link => link.addEventListener("click", () => $("#navLinks").classList.remove("open")));
-$$(".nav-link").forEach(link => link.addEventListener("click", () => {
-  $$(".nav-link").forEach(other => other.classList.remove("active"));
-  link.classList.add("active");
-}));
+$$("[data-question]").forEach(button => button.addEventListener("click", () => sendChat(button.dataset.question)));
 
 document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    if (!viewer.classList.contains("hidden")) closeViewer();
+    if (!chatModal.classList.contains("hidden")) closeChat();
+  }
   if (!viewer.classList.contains("hidden")) {
-    if (event.key === "Escape") closeViewer();
     if (event.key === "ArrowRight") stepViewer(1);
     if (event.key === "ArrowLeft") stepViewer(-1);
-    return;
-  }
-  if (event.key === "Escape") { closeChat(); closeReport(); }
-  if (event.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
-    event.preventDefault();
-    $("#announcementSearch").focus();
   }
 });
-
-/* ---------------------------------------------------------------
-   REPORT A PROBLEM
-   If sending fails (no signal, server down), the report is kept on
-   the device and sent automatically the next time the site opens.
----------------------------------------------------------------- */
-const reportModal = $("#reportModal");
-function openReport() { reportModal.classList.remove("hidden"); $("#reportStatus").textContent = ""; setTimeout(() => $("#reportDetails").focus(), 100); }
-function closeReport() { reportModal.classList.add("hidden"); }
-$$("[data-open-report]").forEach(b => b.addEventListener("click", openReport));
-$("#closeReport").addEventListener("click", closeReport);
-reportModal.addEventListener("click", event => { if (event.target === reportModal) closeReport(); });
-
-function loadQueue() { try { return JSON.parse(localStorage.getItem("pendingReports") || "[]"); } catch (e) { return []; } }
-function saveQueue(queue) { try { localStorage.setItem("pendingReports", JSON.stringify(queue.slice(-5))); } catch (e) { /* storage blocked: ignore */ } }
-
-async function sendReport(payload) {
-  const response = await fetch("/api/problem-reports", {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) { const err = new Error(data.message || "The report could not be sent."); err.permanent = response.status >= 400 && response.status < 500; throw err; }
-  return data;
-}
-
-let flushing = false;           // stops two flushes from sending the same report twice
-async function flushQueue() {
-  if (flushing) return;
-  const queue = loadQueue();
-  if (!queue.length) return;
-  flushing = true;
-  saveQueue([]);                // take them out first; put back only the ones that fail
-  const left = [];
-  for (const payload of queue) {
-    try { await sendReport(payload); } catch (e) { if (!e.permanent) left.push(payload); }
-  }
-  saveQueue([...left, ...loadQueue()]);
-  flushing = false;
-}
-
-$("#reportForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  const status = $("#reportStatus");
-  const button = $("#reportSubmit");
-  const tech = $("#reportTech").checked;
-  const payload = {
-    type: $("#reportType").value,
-    details: $("#reportDetails").value,
-    contact: $("#reportContact").value,
-    page_url: location.href,
-    user_agent: tech ? navigator.userAgent : "",
-    viewport: tech ? `${window.innerWidth}x${window.innerHeight}` : "",
-    js_errors: tech ? window.__jsErrors : []
-  };
-  button.disabled = true;
-  status.className = "form-message"; status.textContent = "Sending...";
-  try {
-    const result = await sendReport(payload);
-    status.textContent = result.message; status.className = "form-message success";
-    event.target.reset();
-    setTimeout(closeReport, 2500);
-  } catch (error) {
-    if (error.permanent) {                    // e.g. empty text or too many reports: tell the person
-      status.textContent = error.message; status.className = "form-message error";
-    } else {                                  // network or server problem: keep it and retry later
-      saveQueue([...loadQueue(), payload]);
-      status.textContent = "We could not reach the server, but your report has been saved on this device and will be sent automatically once the connection returns.";
-      status.className = "form-message success";
-      event.target.reset();
-      setTimeout(closeReport, 4500);
-    }
-  } finally { button.disabled = false; }
-});
-window.addEventListener("online", flushQueue);
 
 loadAnnouncements();
 loadEvents();

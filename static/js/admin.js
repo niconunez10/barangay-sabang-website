@@ -125,10 +125,7 @@ const LISTS = {
     sub: i => `Keywords: ${(i.keywords || []).join(", ") || "none"}`, title: i => i.topic
   }
 };
-<<<<<<< HEAD
 const verificationPollTimers = {};
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 function thumbsHTML(kind, item) {
   return (item.media || []).map(m => {
@@ -147,7 +144,6 @@ function rowHTML(kind, item, archived) {
   const note = archived && item.archived_on ? ` · archived ${escapeHTML(item.archived_on)}` : "";
   const answer = kind === "guides" ? `<p class="guide-answer">${escapeHTML(item.answer)}</p>` : "";
   const data = `data-kind="${kind}" data-id="${item.id}"`;
-<<<<<<< HEAD
   const checkable = ["announcements", "events"].includes(kind);
   const verificationStatus = item.verification_status || "pending";
   const verificationLabels = {
@@ -171,10 +167,6 @@ function rowHTML(kind, item, archived) {
   return `<div class="admin-list-item stack">
     <div class="row-main"><div><strong>${escapeHTML(cfg.title(item))}</strong><small>${escapeHTML(cfg.sub(item))}${note}</small></div></div>
     ${verification}
-=======
-  return `<div class="admin-list-item stack">
-    <div class="row-main"><div><strong>${escapeHTML(cfg.title(item))}</strong><small>${escapeHTML(cfg.sub(item))}${note}</small></div></div>
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
     ${answer}
     ${item.media.length ? `<div class="thumbs">${thumbsHTML(kind, item)}</div>` : ""}
     <div class="row-actions">
@@ -182,14 +174,10 @@ function rowHTML(kind, item, archived) {
       ${archived
         ? `<button class="act-btn" type="button" data-act="restore" ${data}>Restore</button>
            <button class="delete-btn" type="button" data-act="delete" ${data}>Delete permanently</button>`
-<<<<<<< HEAD
         : `<button class="act-btn" type="button" data-act="archive" ${data}>Add to archive</button>
            ${checkable ? `<button class="act-btn" type="button" data-act="edit" ${data}>Edit</button>
              <button class="act-btn" type="button" data-act="recheck" ${data}>Re-check for AI</button>` : ""}
            ${kind === "announcements" ? `<button class="delete-btn" type="button" data-act="delete" ${data}>Delete announcement</button>` : ""}`}
-=======
-        : `<button class="act-btn" type="button" data-act="archive" ${data}>Add to archive</button>`}
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
     </div>
   </div>`;
 }
@@ -202,14 +190,11 @@ async function loadKind(kind) {
     const old = items.filter(i => i.status === "Archived");
     $(cfg.live).innerHTML = live.map(i => rowHTML(kind, i, false)).join("") || `<p class="empty-note">${cfg.empty}</p>`;
     $(cfg.archive).innerHTML = old.map(i => rowHTML(kind, i, true)).join("") || `<p class="empty-note">Nothing in the archive.</p>`;
-<<<<<<< HEAD
     clearTimeout(verificationPollTimers[kind]);
     if (["announcements", "events"].includes(kind)
         && live.some(item => (item.verification_status || "pending") === "pending")) {
       verificationPollTimers[kind] = setTimeout(() => loadKind(kind), 3500);
     }
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   } catch (e) { $(cfg.live).textContent = e.message; }
 }
 const reloadAll = () => { loadKind("announcements"); loadKind("events"); loadKind("guides"); loadSummary(); };
@@ -221,7 +206,6 @@ document.addEventListener("click", async event => {
   const { act, kind, id, mid } = btn.dataset;
   try {
     if (act === "preview") { openPreview(btn.dataset.url, btn.dataset.mkind, btn.dataset.name); return; }
-<<<<<<< HEAD
     if (act === "edit") {
       const item = (await api(`/api/admin/${kind}`)).find(record => record.id === Number(id));
       if (!item) throw new Error("Post not found. Refresh the list and try again.");
@@ -239,8 +223,6 @@ document.addEventListener("click", async event => {
       }
       return;
     }
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
     if (act === "add-media") {
       const input = document.createElement("input");
       input.type = "file"; input.multiple = true; input.accept = FILE_ACCEPT;
@@ -272,7 +254,6 @@ document.addEventListener("click", async event => {
   } catch (e) { showToast(e.message); }
 });
 
-<<<<<<< HEAD
 /* ---------- Edit announcement or event ---------- */
 let editingPost = null;
 const editPostModal = $("#editPostModal");
@@ -344,8 +325,6 @@ $("#editPostForm").addEventListener("submit", async event => {
   }
 });
 
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 /* ---------- Forms ---------- */
 async function submitForm({ formEl, statusEl, buttonEl, url, fields, picker, okText, busyText }) {
   setStatus(statusEl, busyText);
@@ -371,12 +350,8 @@ $("#eventForm").addEventListener("submit", event => {
   submitForm({ formEl: event.target, statusEl: $("#eStatus"), buttonEl: $("#eSubmit"), url: "/api/admin/events",
     picker: pickers.e, okText: "Event added.", busyText: "Adding...",
     fields: () => ({ title: $("#eTitle").value, date: $("#eDate").value, time: $("#eTime").value,
-<<<<<<< HEAD
       location: $("#eLocation").value, description: $("#eDescription").value,
       requirements: $("#eRequirements").value }) });
-=======
-      location: $("#eLocation").value, description: $("#eDescription").value }) });
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 });
 $("#guideForm").addEventListener("submit", event => {
   event.preventDefault();
@@ -397,9 +372,8 @@ async function askTest() {
     const media = r.media || [];
     const video = media.find(m => m.kind === "video");
     const pics = media.filter(m => m.kind === "image");
-    if (video) { const b = document.createElement("button"); b.type = "button"; b.className = "chat-demo-btn"; b.textContent = "▶ Click for video demo"; b.onclick = () => openPreview(video.url, "video", video.name); box.append(document.createElement("br"), b); }
+    if (video) { const b = document.createElement("button"); b.type = "button"; b.className = "chat-demo-btn"; b.textContent = "▶ Watch guide video"; b.onclick = () => openPreview(video.url, "video", video.name); box.append(document.createElement("br"), b); }
     if (pics.length) { const b = document.createElement("button"); b.type = "button"; b.className = "chat-demo-btn alt"; b.textContent = "🖼 View guide pictures"; b.onclick = () => openPreview(pics[0].url, "image", pics[0].name); box.append(document.createElement("br"), b); }
-<<<<<<< HEAD
     if ((r.sources || []).length) {
       const sourceRow = document.createElement("div");
       sourceRow.className = "chat-source-row";
@@ -416,8 +390,6 @@ async function askTest() {
       });
       box.appendChild(sourceRow);
     }
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   } catch (e) { box.textContent = e.message; }
 }
 $("#testAsk").addEventListener("click", askTest);

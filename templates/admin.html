@@ -6,23 +6,13 @@
   <meta name="robots" content="noindex">
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Admin dashboard | Barangay Sabang</title>
-<<<<<<< HEAD
-=======
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="dash-body">
   <header class="dash-header">
     <div class="dash-header-inner">
       <a class="brand" href="/admin" aria-label="Admin dashboard home">
-<<<<<<< HEAD
         <div class="brand-mark"><img src="{{ url_for('static', filename='img/barangay-sabang-logo.png') }}" alt=""></div>
-=======
-        <div class="brand-mark"><span>BS</span></div>
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
         <div class="brand-copy"><strong>BARANGAY SABANG</strong><small>ADMIN DASHBOARD</small></div>
       </a>
       <div class="dash-user">
@@ -37,7 +27,7 @@
 
   <main class="dash-main">
     <div class="demo-warning">
-      Demo data is kept in memory and resets when Flask restarts. The login is admin / admin, so change it before anyone else can reach this site.
+      Portal content is saved on this computer and restored when Flask starts. The default login is admin / admin; change it before sharing this site.
     </div>
 
     <section class="dash-stats" aria-label="Summary">
@@ -98,11 +88,8 @@
           <input id="eLocation" maxlength="140" required placeholder="e.g. Barangay Hall">
           <label for="eDescription">Details <span class="optional">(optional)</span></label>
           <textarea id="eDescription" maxlength="600" rows="3" placeholder="Who should come, what to bring..."></textarea>
-<<<<<<< HEAD
           <label for="eRequirements">Requirements or items to bring <span class="optional">(optional)</span></label>
           <textarea id="eRequirements" maxlength="600" rows="2" placeholder="Only enter officially confirmed details"></textarea>
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
           <label>Photos, videos, or files <span class="optional">(optional)</span></label>
           <input id="eFiles" class="hidden-file" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
           <div class="picker-list" id="ePicked"></div>
@@ -125,7 +112,7 @@
       <div class="dash-grid">
         <form id="guideForm" class="dash-card admin-form">
           <h2>Guide the AI</h2>
-          <p class="help-text">Teach the assistant how an event or service works. When a resident's question contains one of your keywords, the assistant gives your answer in a polite, formal tone. Add a video demo or guide pictures and a <strong>“Click for video demo”</strong> button appears under the answer.</p>
+          <p class="help-text">Teach the assistant how an event or service works. When a resident's question contains one of your keywords, the assistant gives your answer in a polite, formal tone. Add a guide video or pictures to show residents the steps.</p>
           <label for="gTopic">Topic <span class="required">*</span></label>
           <input id="gTopic" maxlength="100" required placeholder="e.g. How to use the free printing service">
           <label for="gKeywords">Keywords residents may use <span class="required">*</span></label>
@@ -133,7 +120,7 @@
           <small class="field-hint">Separate with commas. Include different ways residents may say it.</small>
           <label for="gAnswer">What should the AI say? <span class="required">*</span></label>
           <textarea id="gAnswer" maxlength="1200" rows="5" required placeholder="Write the steps or rules in plain words. The assistant will present them politely."></textarea>
-          <label>Video demo or guide pictures <span class="optional">(you provide the file)</span></label>
+          <label>Guide video or pictures <span class="optional">(you provide the file)</span></label>
           <input id="gFiles" class="hidden-file" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv">
           <div class="picker-list" id="gPicked"></div>
           <button class="btn btn-outline-blue" type="button" id="gAddMore">+ Add more photos, videos, or files</button>
@@ -174,7 +161,6 @@
     </section>
   </main>
 
-<<<<<<< HEAD
   <div class="modal-backdrop hidden" id="editPostModal" role="dialog" aria-modal="true" aria-labelledby="editPostTitle">
     <form class="report-window" id="editPostForm">
       <div class="report-head">
@@ -204,8 +190,6 @@
     </form>
   </div>
 
-=======
->>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   <div class="viewer hidden" id="viewer" role="dialog" aria-modal="true" aria-label="Preview">
     <div class="viewer-bar"><span class="viewer-title" id="viewerTitle"></span><a class="viewer-open" id="viewerOpen" href="#" target="_blank" rel="noopener">Open in new tab</a><button class="viewer-close" type="button" id="viewerClose" aria-label="Close">×</button></div>
     <div class="viewer-stage" id="viewerStage"></div>
