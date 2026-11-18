@@ -15,8 +15,13 @@ async function api(url, options = {}) {
     headers: { "Content-Type": "application/json" },
     ...options
   });
+<<<<<<< HEAD
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || data.detail || "Something went wrong. Please try again.");
+=======
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Something went wrong. Please try again.");
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   return data;
 }
 
@@ -317,10 +322,13 @@ $("#suggestionForm").addEventListener("submit", async event => {
 });
 
 const chatModal = $("#chatModal");
+<<<<<<< HEAD
 const chatForm = $("#chatForm");
 const chatInput = $("#chatInput");
 const chatSendButton = $("#chatSendButton");
 let chatBusy = false;
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 function openChat() { chatModal.classList.remove("hidden"); setTimeout(() => $("#chatInput").focus(), 100); }
 function closeChat() { chatModal.classList.add("hidden"); }
 $("#openChatTop").addEventListener("click", openChat);
@@ -329,6 +337,7 @@ $("#openChatFab").addEventListener("click", openChat);
 $("#closeChat").addEventListener("click", closeChat);
 chatModal.addEventListener("click", event => { if (event.target === chatModal) closeChat(); });
 
+<<<<<<< HEAD
 function speakChatMessage(text) {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
@@ -338,11 +347,15 @@ function speakChatMessage(text) {
 }
 
 function appendChat(text, type, media = [], sources = []) {
+=======
+function appendChat(text, type, media = []) {
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   const bubble = document.createElement("div");
   bubble.className = `chat-bubble ${type === "user" ? "user-bubble" : "bot-bubble"}`;
   bubble.textContent = text;
   const box = $("#chatMessages");
   box.appendChild(bubble);
+<<<<<<< HEAD
   if (type !== "user" && "speechSynthesis" in window) {
     const speakButton = document.createElement("button");
     speakButton.type = "button";
@@ -352,6 +365,8 @@ function appendChat(text, type, media = [], sources = []) {
     speakButton.addEventListener("click", () => speakChatMessage(text));
     box.appendChild(speakButton);
   }
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
   // Admin-provided demo video and/or guide pictures become buttons under the answer.
   const videos = media.filter(m => m.kind === "video");
   const pictures = media.filter(m => m.kind === "image");
@@ -372,6 +387,7 @@ function appendChat(text, type, media = [], sources = []) {
     }
     box.appendChild(row);
   }
+<<<<<<< HEAD
   if (sources.length) {
     const sourceRow = document.createElement("div");
     sourceRow.className = "chat-source-row";
@@ -493,6 +509,26 @@ if (SpeechRecognition) {
   chatMicButton.disabled = true;
   chatMicButton.title = "Voice input is not supported by this browser.";
 }
+=======
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendChat(message) {
+  if (!message.trim()) return;
+  appendChat(message, "user");
+  $("#chatInput").value = "";
+  $$(".suggested-questions").forEach(el => el.remove());
+  try {
+    const result = await api("/api/chat", { method: "POST", body: JSON.stringify({ message }) });
+    appendChat(result.reply, "bot", result.media || []);
+  } catch (error) { appendChat(error.message, "bot"); }
+}
+$("#chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  sendChat($("#chatInput").value);
+});
+$$(".suggested-questions button").forEach(button => button.addEventListener("click", () => sendChat(button.dataset.question)));
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 $("#mobileMenuBtn").addEventListener("click", () => $("#navLinks").classList.toggle("open"));
 $$(".nav-links a").forEach(link => link.addEventListener("click", () => $("#navLinks").classList.remove("open")));

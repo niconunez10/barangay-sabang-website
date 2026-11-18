@@ -20,7 +20,11 @@ So there is nothing to delete in this zip. If an older or other copy of your pro
 ```powershell
 py -m venv venv
 .\venv\Scripts\Activate.ps1
+<<<<<<< HEAD
 pip install -r requirements-local.txt
+=======
+pip install -r requirements.txt
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 py app.py
 ```
 
@@ -31,8 +35,11 @@ py app.py
 | File | What changed |
 |---|---|
 | `app.py` | Uploads, media, archive, Guide AI, formal chat replies, problem reports, saving data to disk |
+<<<<<<< HEAD
 | `ai_engine.py`, `chatbot.py`, `database.py` | Local-only preprocessing, retrieval, intent classification, dialogue context, and SQLite |
 | `intents.json`, `synonyms.json` | Local training examples and editable synonym/typo mappings |
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 | `templates/index.html` | Report-a-problem button and window, expanded viewer, phone/home-screen tags |
 | `templates/admin.html` | Photo/video/file pickers, Archive sections, Guide AI tab, Problem reports tab |
 | `static/js/main.js` | Sliders, hover preview, expanded view, chat demo buttons, report sending |
@@ -107,6 +114,7 @@ The **⤢ Expand** button (top-right of the slider), or tapping the media, opens
 - Each active announcement, event, and guide has an **Add to archive** button.
 - Archived items are **hidden from residents** (the public API only returns `status == "Published"`).
 - Archived items go to the **Archive** section under the list. They **never expire**: there is no date logic anywhere, and the data is saved to `instance/data.json`.
+<<<<<<< HEAD
 - Click **Restore** and it is visible to residents again. Events and announcements automatically refresh their local AI index after restoring.
 - Published announcements have a **Delete announcement** button as well as **Add to archive**. Deleting is permanent and erases its uploaded files, so the admin page asks for confirmation first.
 - Events and guides must still be archived before they can be deleted. Archived announcements, events, and guides can be restored or deleted permanently.
@@ -114,6 +122,12 @@ The **⤢ Expand** button (top-right of the slider), or tapping the media, opens
 - The post card shows its local AI index status. **Local Only** means the post was indexed but not independently verified. No web search or LLM check runs.
 
 **To test:** edit an event, archive and restore it, then use **Re-check for AI** and watch the local status update. Refresh the public page to confirm archived content disappears and restored content returns.
+=======
+- Click **Restore** and it is visible to residents again.
+- **Delete permanently** exists only inside the archive, so nothing is lost by accident. The server also refuses to delete an item that is not archived first. Deleting also erases that item's uploaded files.
+
+**To test:** archive an announcement, refresh the public page (it disappears), then Restore it (it returns).
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 ---
 
@@ -123,7 +137,11 @@ The **⤢ Expand** button (top-right of the slider), or tapping the media, opens
 
 1. **Topic**: e.g. `How to use the free printing service`.
 2. **Keywords**: words residents may use, separated by commas, e.g. `print, printing, printer, xerox`. Keywords of 4+ letters also match longer forms ("print" matches "printer"). Short ones such as `id` must match the whole word.
+<<<<<<< HEAD
 3. **What should the AI say?** Enter complete, accurate, resident-ready steps in clear wording. The local assistant uses a fixed template and does not paraphrase shorthand or add unsupported details.
+=======
+3. **What should the AI say?** Write the steps in clear, formal wording. The assistant shows your text exactly as written.
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 4. **Video demo or guide pictures** (optional): upload the demo video **you** made, or screenshots or photos that explain the steps.
 5. Click **Save guide**.
 
@@ -133,9 +151,13 @@ Use **Try the assistant** (right side) to type a question and check the result b
 
 When a resident's question matches your guide:
 
+<<<<<<< HEAD
 - The local TF-IDF index retrieves published guides, services, events, or announcements. Only matched record fields are used in a fixed response template.
 - If the best match is below 0.35, the assistant does not guess and offers topic suggestions.
 - Event/announcement records are local admin posts, not externally verified references.
+=======
+- The assistant replies with your answer.
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 - If you uploaded a video, a red **▶ Click for video demo** button appears under the answer. It opens the video in the expanded viewer.
 - If you uploaded pictures, a blue **🖼 View guide pictures** button opens them as a gallery.
 
@@ -143,9 +165,19 @@ Guides are checked **before** the built-in answers, so your guide always wins. A
 
 ### Step 9: Polite and formal tone
 
+<<<<<<< HEAD
 The local template replies are polite and use the resident's language when possible. They do not use a generative model or paraphrase admin notes, so enter clear, resident-ready guide text:
 
 Greetings, thank-you responses, event lists, emergency guidance, and missing-information replies are local templates. The speech-recognition button is provided by the browser and may require internet; typing is the offline option. For details on the custom tokenizer, TF-IDF/cosine ranking, 0.35 threshold, and Naive Bayes intents, see `ai_engine.py`.
+=======
+All the built-in replies in `app.py` (`chat()`) were rewritten, for example:
+
+> "Good day. I regret that I do not have a verified answer to your question at this time. May I kindly ask you to rephrase it, or to contact authorized barangay personnel for assistance?"
+
+The greeting, "thank you" replies, event lists, and announcement lists are also formal. For **your guides**, the tone is whatever you type, so write them politely (for example, "Kindly bring…", "Please proceed to…").
+
+> **Honest note:** this assistant matches keywords and shows what you taught it. It is not a trained AI model, so it cannot answer questions you have not guided it on. If you connect a real AI model later, the tone rule would go into its instructions, for example: *"Always respond politely and formally, as a courteous barangay assistant. Use only the information provided."*
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 ---
 
@@ -250,8 +282,11 @@ Tick each one:
 - [ ] Open the PDF in Expand (computer) and Download (phone).
 - [ ] Admin: **+ Add more photos** on an existing post → new photo appears.
 - [ ] **Add to archive** → disappears from the public page. **Restore** → returns.
+<<<<<<< HEAD
 - [ ] Edit an event/announcement and verify its AI Reference status returns to Checking, then updates.
 - [ ] Re-check an active post and verify the badge and source note refresh.
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 - [ ] Try uploading a `.exe` → refused with a clear message.
 - [ ] Guide AI: create a guide with a video; ask the chat → **Click for video demo** works.
 - [ ] Ask the chat something unknown → polite, formal reply.
@@ -267,4 +302,8 @@ Tick each one:
 - **Data is now saved** to `instance/data.json` (it no longer resets when Flask restarts). Back up the `instance` folder. This is what lets archived items last forever. For a real launch, move to a database (PostgreSQL), as already planned in your README.
 - **Uploaded files have unguessable web addresses**, but anyone with a direct link can open it, even if the post is archived. Do not upload private documents (IDs, forms with personal data) until real file permissions exist.
 - **Before going public:** change `admin` / `admin`, set `SECRET_KEY`, turn off debug, use HTTPS, and review who may upload. Videos can be large, so check your hosting storage and bandwidth.
+<<<<<<< HEAD
 - **Not built (ask me if wanted):** video compression, drag-to-reorder photos, and separate developer accounts.
+=======
+- **Not built (ask me if wanted):** video compression, editing an announcement's text after posting, drag-to-reorder photos, and separate developer accounts.
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd

@@ -2,15 +2,21 @@ import json
 import os
 import re
 import secrets
+<<<<<<< HEAD
 import sqlite3
 import threading
 import time
 import urllib.error
+=======
+import threading
+import time
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 import urllib.request
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
 
+<<<<<<< HEAD
 from dotenv import load_dotenv
 from flask import (Flask, abort, jsonify, redirect, render_template, request,
                    send_from_directory, session, url_for)
@@ -23,6 +29,13 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
+=======
+from flask import (Flask, abort, jsonify, redirect, render_template, request,
+                   send_from_directory, session, url_for)
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
@@ -50,11 +63,18 @@ DEV_WEBHOOK_URL = os.environ.get("DEV_WEBHOOK_URL", "")
 # ---------------------------------------------------------------------------
 # FILE UPLOAD SETTINGS
 # ---------------------------------------------------------------------------
+<<<<<<< HEAD
 DATA_DIR = BASE_DIR / "instance"          # already listed in .gitignore
 UPLOAD_DIR = DATA_DIR / "uploads"
 DATA_FILE = DATA_DIR / "data.json"
 AI_DB_FILE = DATA_DIR / "barangay_ai.sqlite3"
 LOCAL_DB_FILE = DATA_DIR / "barangay.db"
+=======
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "instance"          # already listed in .gitignore
+UPLOAD_DIR = DATA_DIR / "uploads"
+DATA_FILE = DATA_DIR / "data.json"
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 DATA_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -130,6 +150,7 @@ MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
 COLLECTIONS = {"announcements": announcements, "events": events, "guides": guides}
 
 data_lock = threading.RLock()
+<<<<<<< HEAD
 LOCAL_DATABASE = LocalDatabase(LOCAL_DB_FILE)
 LOCAL_AI_ENGINE = LocalAIEngine(BASE_DIR)
 LOCAL_CHATBOT = LocalChatbot(LOCAL_DATABASE, LOCAL_AI_ENGINE)
@@ -344,6 +365,8 @@ def load_ai_context():
         }
     finally:
         connection.close()
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 def save_data():
@@ -354,6 +377,7 @@ def save_data():
         tmp = DATA_FILE.with_suffix(".tmp")
         tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
         os.replace(tmp, DATA_FILE)
+<<<<<<< HEAD
         sync_ai_context_db()
 
 
@@ -372,14 +396,19 @@ def _local_only_metadata(item):
         "source_urls": [],
         "last_checked_at": datetime.now().astimezone().isoformat(timespec="seconds"),
     })
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 def load_data():
     if not DATA_FILE.exists():
+<<<<<<< HEAD
         for collection in (announcements, events):
             for item in collection:
                 if item.get("status", "Published") == "Published":
                     _local_only_metadata(item)
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
         save_data()
         return
     try:
@@ -394,6 +423,7 @@ def load_data():
             if name in saved:
                 target[:] = saved[name]
         ids.update(saved.get("ids", {}))
+<<<<<<< HEAD
         for collection in (announcements, events):
             for item in collection:
                 if item.get("status") == "Published":
@@ -402,6 +432,11 @@ def load_data():
 
 load_data()
 sync_ai_context_db()
+=======
+
+
+load_data()
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 def new_id(kind):
@@ -411,6 +446,7 @@ def new_id(kind):
         return value
 
 
+<<<<<<< HEAD
 EVENT_CONTENT_TABLES = {"announcements", "events"}
 _EVENT_CHECKS_IN_FLIGHT = set()
 _EVENT_CHECKS_LOCK = threading.Lock()
@@ -503,6 +539,8 @@ def start_pending_event_checks(kind):
         start_event_background_check(item_id, kind)
 
 
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 # ---------------------------------------------------------------------------
 # UPLOAD HELPERS
 # ---------------------------------------------------------------------------
@@ -567,6 +605,7 @@ def find_item(kind, item_id):
     return None
 
 
+<<<<<<< HEAD
 def public_item(item, for_admin=False):
     """Copy of an item that is safe to send to residents."""
     internal_fields = {
@@ -586,6 +625,13 @@ def public_item(item, for_admin=False):
         clean.setdefault("source_urls", [])
         clean.setdefault("last_checked_at", "")
         clean["date_input"] = item.get("_sort", "")
+=======
+def public_item(item):
+    """Copy of an item that is safe to send to residents."""
+    clean = {k: v for k, v in item.items() if not k.startswith("_")}
+    clean["media"] = [{k: m[k] for k in ("id", "name", "url", "kind", "size")}
+                      for m in item.get("media", [])]
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
     return clean
 
 
@@ -799,6 +845,7 @@ def submit_problem_report():
 # ---- AI assistant -----------------------------------------------------------
 def has_word(text, words):
     """Whole-word match, so 'hi' does not trigger on 'this' or 'which'."""
+<<<<<<< HEAD
     text = text.lower()
     return any(re.search(rf"\b{re.escape(w)}\b", text) for w in words)
 
@@ -808,10 +855,21 @@ def find_guide(question, entries=None):
     best, best_score = None, 0
     for g in guides if entries is None else entries:
         if g.get("status", "Published") != "Published":
+=======
+    return any(re.search(rf"\b{re.escape(w)}\b", text) for w in words)
+
+
+def find_guide(question):
+    """Returns the admin-taught guide that best matches the question, or None."""
+    best, best_score = None, 0
+    for g in guides:
+        if g.get("status") != "Published":
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
             continue
         terms = [k for k in g.get("keywords", []) if k] + [g["topic"].lower()]
         # Keywords of 4+ letters also match longer forms ("print" finds "printer",
         # "printing"). Short ones must match the whole word ("id" must not match "idea").
+<<<<<<< HEAD
         score = sum(
             1 for term in terms
             if re.search(
@@ -819,11 +877,16 @@ def find_guide(question, entries=None):
                 question,
             )
         )
+=======
+        score = sum(1 for t in terms
+                    if re.search(rf"\b{re.escape(t)}{r'\w*' if len(t) >= 4 else r'\b'}", question))
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
         if score > best_score:
             best, best_score = g, score
     return best
 
 
+<<<<<<< HEAD
 def _matching_guides(question, entries):
     return _rank_records(question, entries, ("topic", "keywords"))[:5]
 
@@ -1118,6 +1181,50 @@ def chat():
             "message": "The assistant's local records are temporarily unavailable."
         }), 503
     return jsonify(result)
+=======
+@app.post("/api/chat")
+def chat():
+    data = request.get_json(silent=True) or {}
+    question = str(data.get("message", "")).strip().lower()
+    if not question:
+        return jsonify({"reply": "Kindly type your question first."}), 400
+
+    # 1) Things the admin taught the assistant always come first.
+    guide = find_guide(question)
+    if guide:
+        visual = [{"name": m["name"], "url": m["url"], "kind": m["kind"]}
+                  for m in guide.get("media", []) if m["kind"] in ("video", "image")]
+        return jsonify({"reply": guide["answer"], "topic": guide["topic"], "media": visual})
+
+    # 2) Built-in answers (polite and formal).
+    if has_word(question, ["print", "printing", "printer"]):
+        reply = "Good day. For the free printing service, kindly refer to the barangay's approved schedule, requirements, and usage rules. Verified details have not yet been provided in this portal, so we respectfully advise you to confirm them with authorized barangay personnel."
+    elif has_word(question, ["library", "e-library", "ebook", "ebooks"]):
+        reply = "Good day. For access to the e-library, we kindly ask you to confirm the current operating hours and available resources with authorized barangay personnel."
+    elif has_word(question, ["computer", "computers", "pc", "facility", "facilities"]):
+        reply = "Good day. Regarding the computer facilities, we kindly ask you to confirm their availability, operating hours, and usage guidelines with authorized barangay personnel."
+    elif has_word(question, ["event", "events", "activity", "activities", "schedule", "upcoming"]):
+        live = [e for e in events if e.get("status") == "Published"]
+        if live:
+            lines = [f"• {e['title']} on {e['date']} at {e['time']} ({e['location']})" for e in live]
+            reply = "Certainly. The following events are currently listed:\n" + "\n".join(lines) + "\n\nWe respectfully advise you to confirm the final schedule with the barangay."
+        else:
+            reply = "I regret to inform you that there are no events listed at this time. Kindly check again at a later date."
+    elif has_word(question, ["announcement", "announcements", "news", "update", "updates"]):
+        latest = [a for a in announcements if a["status"] == "Published"][:3]
+        if latest:
+            lines = [f"• {a['title']} ({a['date']})" for a in latest]
+            reply = "Certainly. These are the latest announcements:\n" + "\n".join(lines) + "\n\nYou may view all of them in the Announcements section of this page."
+        else:
+            reply = "I regret to inform you that there are no announcements posted at this time."
+    elif has_word(question, ["thanks", "thank"]):
+        reply = "You are most welcome. Please do not hesitate to ask should you need any further assistance."
+    elif has_word(question, ["hello", "hi", "hey", "good morning", "good afternoon", "good evening"]):
+        reply = "Good day, and welcome to the Barangay Sabang portal. I am the virtual assistant. You may ask me about announcements, events, free printing, the e-library, or the computer facilities. How may I help you?"
+    else:
+        reply = "Good day. I regret that I do not have a verified answer to your question at this time. May I kindly ask you to rephrase it, or to contact authorized barangay personnel for assistance?"
+    return jsonify({"reply": reply, "media": []})
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 
@@ -1217,9 +1324,13 @@ def form_data():
 def admin_list(kind):
     if kind not in COLLECTIONS:
         abort(404)
+<<<<<<< HEAD
     if kind in EVENT_CONTENT_TABLES:
         start_pending_event_checks(kind)
     return jsonify([public_item(i, for_admin=True) for i in COLLECTIONS[kind]])
+=======
+    return jsonify([public_item(i) for i in COLLECTIONS[kind]])
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 @app.post("/api/admin/announcements")
@@ -1242,8 +1353,12 @@ def add_announcement():
             "status": "Published", "media": media}
     announcements.insert(0, item)
     save_data()
+<<<<<<< HEAD
     start_event_background_check(item["id"], "announcements")
     return jsonify({"ok": True, "announcement": public_item(item, for_admin=True)})
+=======
+    return jsonify({"ok": True, "announcement": public_item(item)})
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 @app.post("/api/admin/events")
@@ -1255,12 +1370,19 @@ def add_event():
     time_text = str(data.get("time", "")).strip()
     location = str(data.get("location", "")).strip()
     description = str(data.get("description", "")).strip()
+<<<<<<< HEAD
     requirements = str(data.get("requirements", "")).strip()
 
     if not title or not date_text or not location:
         return jsonify({"ok": False, "message": "Title, date, and location are required."}), 400
     if (len(title) > 140 or len(location) > 140 or len(description) > 600
             or len(requirements) > 600):
+=======
+
+    if not title or not date_text or not location:
+        return jsonify({"ok": False, "message": "Title, date, and location are required."}), 400
+    if len(title) > 140 or len(location) > 140 or len(description) > 600:
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
         return jsonify({"ok": False, "message": "Please shorten one of the fields."}), 400
     try:
         when = datetime.strptime(date_text, "%Y-%m-%d")
@@ -1281,11 +1403,16 @@ def add_event():
     item = {"id": new_id("events"), "day": str(when.day), "month": MONTHS[when.month - 1],
             "title": title, "date": f"{when.strftime('%B')} {when.day}, {when.year}",
             "time": shown_time, "location": location,
+<<<<<<< HEAD
             "description": description, "requirements": requirements,
+=======
+            "description": description or "Details to be announced.",
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
             "_sort": date_text, "status": "Published", "media": media}
     events.append(item)
     events.sort(key=lambda e: e.get("_sort", "9999-99-99"))
     save_data()
+<<<<<<< HEAD
     start_event_background_check(item["id"], "events")
     return jsonify({"ok": True, "event": public_item(item, for_admin=True)})
 
@@ -1355,6 +1482,9 @@ def edit_event_content(kind, item_id):
     save_data()
     start_event_background_check(item_id, kind)
     return jsonify({"ok": True, "item": public_item(item, for_admin=True)})
+=======
+    return jsonify({"ok": True, "event": public_item(item)})
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 @app.post("/api/admin/guides")
@@ -1397,8 +1527,11 @@ def add_media(kind, item_id):
         return jsonify({"ok": False, "message": error}), 400
     item.setdefault("media", []).extend(media)
     save_data()
+<<<<<<< HEAD
     if kind in EVENT_CONTENT_TABLES and item.get("status") == "Published":
         start_event_background_check(item_id, kind)
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
     return jsonify({"ok": True, "added": len(media)})
 
 
@@ -1414,8 +1547,11 @@ def remove_media(kind, item_id, media_id):
     item["media"] = [m for m in item["media"] if m["id"] != media_id]
     delete_media_files(gone)
     save_data()
+<<<<<<< HEAD
     if kind in EVENT_CONTENT_TABLES and item.get("status") == "Published":
         start_event_background_check(item_id, kind)
+=======
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
     return jsonify({"ok": True})
 
 
@@ -1440,6 +1576,7 @@ def restore_item(kind, item_id):
     item["status"] = "Published"
     item.pop("archived_on", None)
     save_data()
+<<<<<<< HEAD
     if kind in EVENT_CONTENT_TABLES:
         start_event_background_check(item_id, kind)
     return jsonify({"ok": True, "message": "Restored. Residents can see it again."})
@@ -1459,19 +1596,32 @@ def recheck_event_content(kind, item_id):
     return jsonify({"ok": True, "message": "Local AI index refresh started."})
 
 
+=======
+    return jsonify({"ok": True, "message": "Restored. Residents can see it again."})
+
+
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 @app.delete("/api/admin/<kind>/<int:item_id>")
 @admin_required
 def delete_item(kind, item_id):
     item = find_item(kind, item_id)
     if not item:
         return jsonify({"ok": False, "message": "Item not found."}), 404
+<<<<<<< HEAD
     if kind != "announcements" and item.get("status") != "Archived":
+=======
+    if item.get("status") != "Archived":
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
         return jsonify({"ok": False, "message": "Please archive the item first, then delete it from the archive."}), 400
     COLLECTIONS[kind].remove(item)
     delete_media_files(item.get("media", []))
     save_data()
+<<<<<<< HEAD
     message = "Announcement deleted permanently." if kind == "announcements" else "Deleted permanently."
     return jsonify({"ok": True, "message": message})
+=======
+    return jsonify({"ok": True, "message": "Deleted permanently."})
+>>>>>>> d87743001bf31ccb31f9319a6740a485ad88bccd
 
 
 # ---- suggestions ------------------------------------------------------------
