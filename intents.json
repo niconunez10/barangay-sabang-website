@@ -1,0 +1,141 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "hello",
+        "hi",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "kumusta",
+        "magandang umaga",
+        "magandang hapon",
+        "magandang gabi",
+        "hello po"
+      ]
+    },
+    {
+      "tag": "thanks",
+      "patterns": [
+        "thank you",
+        "thanks",
+        "salamat",
+        "salamat po",
+        "maraming salamat",
+        "thank you po"
+      ]
+    },
+    {
+      "tag": "latest_announcements",
+      "patterns": [
+        "latest announcements",
+        "new announcement",
+        "mga bagong anunsyo",
+        "ano ang latest na anunsyo",
+        "show announcements",
+        "recent updates"
+      ]
+    },
+    {
+      "tag": "upcoming_events",
+      "patterns": [
+        "upcoming events",
+        "event schedule",
+        "schedule ng event",
+        "mga susunod na event",
+        "what events are coming up",
+        "may event ba"
+      ]
+    },
+    {
+      "tag": "ask_location",
+      "patterns": [
+        "where is it",
+        "where will it happen",
+        "what is the location",
+        "saan ito",
+        "saan po ito",
+        "saan gaganapin",
+        "anong lugar"
+      ]
+    },
+    {
+      "tag": "ask_date",
+      "patterns": [
+        "when is it",
+        "what date is the event",
+        "kailan ito",
+        "kailan po",
+        "anong petsa"
+      ]
+    },
+    {
+      "tag": "ask_time",
+      "patterns": [
+        "what time is it",
+        "what time will it start",
+        "anong oras",
+        "anong oras po ito",
+        "oras ng event"
+      ]
+    },
+    {
+      "tag": "ask_requirements",
+      "patterns": [
+        "what should i bring",
+        "what are the requirements",
+        "what do i need to bring",
+        "anong kailangan dalhin",
+        "ano ang requirements",
+        "ano po ang kailangan"
+      ]
+    },
+    {
+      "tag": "barangay_clearance",
+      "patterns": [
+        "barangay clearance",
+        "how to get a clearance",
+        "clearance requirements",
+        "clerance",
+        "kuha ng clearance",
+        "paano kumuha ng clearance"
+      ]
+    },
+    {
+      "tag": "indigency_certificate",
+      "patterns": [
+        "certificate of indigency",
+        "indigency certificate",
+        "indigency requirements",
+        "sertipiko ng indigency",
+        "paano kumuha ng indigency"
+      ]
+    },
+    {
+      "tag": "health_center",
+      "patterns": [
+        "health center",
+        "health center schedule",
+        "clinic schedule",
+        "bakuna",
+        "vaccine",
+        "medical mission",
+        "libreng bakuna",
+        "health services"
+      ]
+    },
+    {
+      "tag": "emergency",
+      "patterns": [
+        "there is a fire",
+        "someone needs an ambulance",
+        "medical emergency",
+        "crime in progress",
+        "sunog",
+        "kailangan ng rescue",
+        "emergency po"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "ayuda": [
+    "cash assistance",
+    "financial assistance",
+    "relief",
+    "payout",
+    "tulong pinansyal"
+  ],
+  "bakuna": [
+    "vaccine",
+    "vaccination",
+    "immunization",
+    "shot"
+  ],
+  "sedula": [
+    "ctc",
+    "cedula",
+    "community tax certificate"
+  ],
+  "clearance": [
+    "clerance",
+    "clearence",
+    "barangay clearance"
+  ],
+  "indigency": [
+    "certificate of indigency",
+    "indigency certificate",
+    "patunay ng indigency"
+  ],
+  "medical mission": [
+    "health mission",
+    "medical outreach",
+    "libreng checkup"
+  ],
+  "announcement": [
+    "anunsyo",
+    "abiso",
+    "notice",
+    "update"
+  ],
+  "event": [
+    "activity",
+    "aktibidad",
+    "gawain"
+  ]
+}

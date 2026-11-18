@@ -1,0 +1,10 @@
+{
+  "announcements": [
+    {
+      "title": "Sample announcement; replace before production",
+      "content": "This example is intentionally not treated as a verified live announcement.",
+      "published_at": "2026-01-01T09:00:00+08:00",
+      "source_url": "https://barangay.example.gov.ph/announcements/1"
+    }
+  ]
+}
