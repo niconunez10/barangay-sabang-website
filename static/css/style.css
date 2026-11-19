@@ -2009,7 +2009,14 @@ select:focus-visible, textarea:focus-visible {
   background: var(--navy); color: #fff; padding: 42px 52px;
   display: flex; flex-direction: column; position: relative; overflow: hidden;
 }
-.brand-on-dark .brand-copy small { color: #9fb4de; }
+.brand-on-dark { gap: 16px; }
+.brand-on-dark .brand-mark { width: 72px; height: 72px; }
+.brand-on-dark .brand-copy strong {
+  color: #fff; font-size: 17px; line-height: 1.25; letter-spacing: .09em;
+}
+.brand-on-dark .brand-copy small {
+  color: #9fb4de; font-size: 11px; line-height: 1.3; margin-top: 3px;
+}
 .auth-side-copy { margin: auto 0; max-width: 420px; padding: 40px 0; }
 .auth-side-copy h1 {
   font-family: Manrope, sans-serif; font-size: clamp(32px, 3.6vw, 46px);
@@ -2110,6 +2117,9 @@ select:focus-visible, textarea:focus-visible {
 @media (max-width: 860px) {
   .auth-shell { grid-template-columns: 1fr; }
   .auth-side { padding: 28px 24px 34px; }
+  .brand-on-dark .brand-mark { width: 60px; height: 60px; }
+  .brand-on-dark .brand-copy strong { font-size: 15px; }
+  .brand-on-dark .brand-copy small { font-size: 9px; }
   .auth-side-copy { padding: 28px 0 10px; margin: 0; }
   .auth-side-note { display: none; }
   .auth-panel { padding: 24px 16px 40px; }
