@@ -447,7 +447,59 @@ $("#suggestionForm").addEventListener("submit", async event => {
 const chatModal = $("#chatModal");
 const chatInput = $("#chatInput");
 const chatForm = $("#chatForm");
+const chatbotLogoSrc = $(".chat-header-logo").src;
+const chatMicButton = $("#chatMicButton");
+const chatVoiceStatus = $("#chatVoiceStatus");
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let speechRecognition = null;
 let chatBusy = false;
+
+if (SpeechRecognition) {
+  speechRecognition = new SpeechRecognition();
+  speechRecognition.lang = "en-PH";
+  speechRecognition.continuous = false;
+  speechRecognition.interimResults = false;
+  speechRecognition.onstart = () => {
+    chatVoiceStatus.textContent = "Listening... Speak now.";
+  };
+  speechRecognition.onresult = event => {
+    const transcript = Array.from(event.results)
+      .slice(event.resultIndex)
+      .filter(result => result.isFinal)
+      .map(result => result[0].transcript.trim())
+      .filter(Boolean)
+      .join(" ");
+    if (!transcript) return;
+
+    const question = [chatInput.value.trim(), transcript].filter(Boolean).join(" ");
+    chatInput.value = question.slice(0, chatInput.maxLength);
+    chatInput.focus();
+    chatVoiceStatus.textContent = question.length > chatInput.maxLength
+      ? "Voice input reached the 500-character limit. Review your question before sending."
+      : "Voice input added. Review your question before sending.";
+  };
+  speechRecognition.onerror = event => {
+    const errors = {
+      "not-allowed": "Microphone access was denied. Allow microphone access and try again.",
+      "service-not-allowed": "Speech recognition is unavailable. Try again later.",
+      "audio-capture": "No microphone was found. Connect a microphone and try again.",
+      "no-speech": "No speech was detected. Try speaking again.",
+      network: "Speech recognition needs a network connection. Check your connection and try again.",
+      aborted: "Voice input was stopped."
+    };
+    chatVoiceStatus.textContent = errors[event.error] || `Voice input failed (${event.error}). Please try again.`;
+  };
+  speechRecognition.onend = () => {
+    chatMicButton.setAttribute("aria-pressed", "false");
+    chatMicButton.title = "Speak your question";
+    if (chatVoiceStatus.textContent === "Listening... Speak now.") {
+      chatVoiceStatus.textContent = "No speech was detected. Try speaking again.";
+    }
+  };
+} else {
+  chatMicButton.disabled = true;
+  chatVoiceStatus.textContent = "Voice input is not supported by this browser. Type your question instead.";
+}
 
 function openChat() {
   chatModal.classList.remove("hidden");
@@ -456,6 +508,9 @@ function openChat() {
 }
 
 function closeChat() {
+  if (speechRecognition && chatMicButton.getAttribute("aria-pressed") === "true") {
+    speechRecognition.abort();
+  }
   chatModal.classList.add("hidden");
   $("#openChatFab").focus();
 }
@@ -463,9 +518,21 @@ function closeChat() {
 function addChatBubble(text, type = "bot") {
   const bubble = document.createElement("div");
   bubble.className = `chat-bubble ${type === "user" ? "user-bubble" : "bot-bubble"}`;
-  bubble.textContent = text;
+  if (type === "user") {
+    bubble.textContent = text;
+  } else {
+    const logo = document.createElement("img");
+    logo.className = "bot-bubble-logo";
+    logo.src = chatbotLogoSrc;
+    logo.alt = "";
+    logo.setAttribute("aria-hidden", "true");
+    const message = document.createElement("span");
+    message.textContent = text;
+    bubble.append(logo, message);
+  }
   $("#chatMessages").appendChild(bubble);
   bubble.scrollIntoView({ block: "nearest" });
+  return bubble;
 }
 
 async function sendChat(question) {
@@ -473,10 +540,7 @@ async function sendChat(question) {
   chatBusy = true;
   addChatBubble(question, "user");
   chatInput.value = "";
-  const loading = document.createElement("div");
-  loading.className = "chat-bubble bot-bubble";
-  loading.textContent = "Please wait...";
-  $("#chatMessages").appendChild(loading);
+  const loading = addChatBubble("Please wait...");
   try {
     const result = await api("/api/chat", {
       method: "POST",
@@ -494,6 +558,22 @@ async function sendChat(question) {
 
 $("#openChatFab").addEventListener("click", openChat);
 $("#closeChat").addEventListener("click", closeChat);
+chatMicButton.addEventListener("click", () => {
+  if (!speechRecognition) return;
+  if (chatMicButton.getAttribute("aria-pressed") === "true") {
+    speechRecognition.stop();
+    return;
+  }
+  chatMicButton.setAttribute("aria-pressed", "true");
+  chatMicButton.title = "Stop listening";
+  try {
+    speechRecognition.start();
+  } catch (error) {
+    chatMicButton.setAttribute("aria-pressed", "false");
+    chatMicButton.title = "Speak your question";
+    chatVoiceStatus.textContent = `Unable to start voice input (${error.name}). Please try again.`;
+  }
+});
 chatModal.addEventListener("click", event => { if (event.target === chatModal) closeChat(); });
 chatForm.addEventListener("submit", event => {
   event.preventDefault();
